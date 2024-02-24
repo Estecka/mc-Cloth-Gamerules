@@ -1,0 +1,39 @@
+{
+	"schemaVersion": 1,
+	"id": "cloth-gamerules",
+	"version": "${version}",
+	"name": "Cloth Gamerules",
+	"description": "A Cloth Config screen version of the Gamerules menu.",
+	"authors": [
+		"Estecka"
+	],
+	"contact": {
+		"homepage": "https://modrinth.com/mod/cloth-gamerules/",
+		"sources": "https://github.com/Estecka/mc-Cloth-Gamerules"
+	},
+	"license": "GNU AGPLv3",
+	"icon": "assets/cloth-gamerules/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"tk.estecka.clothgamerules.TestRules"
+		],
+		"modmenu": [
+			"tk.estecka.clothgamerules.ModMenu"
+		]
+	},
+	"mixins": [
+		"cloth-gamerules.mixins.json"
+	],
+	"depends": {
+		"minecraft": "*",
+		"cloth-config": "*",
+		"fabricloader": ">=0.15.7",
+		"java": ">=17",
+		"fabric-api": "*"
+	},
+	"recommends": {
+		"cloth-config": ">=10.1.117",
+		"minecraft": "^1.19.4"
+	}
+}
