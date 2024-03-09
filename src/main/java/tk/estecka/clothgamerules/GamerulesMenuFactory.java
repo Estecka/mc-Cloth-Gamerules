@@ -58,6 +58,7 @@ public class GamerulesMenuFactory
 		Map<String, ConfigCategory> tabs = new HashMap<>();
 		// Map<Identifier, SubCategoryBuilder> subs = new HashMap<>();
 		Map<Identifier, CategoryEntries> subs = new HashMap<>();
+		Map<Identifier, GameRules.Category> vanillaCats = new HashMap<>();
 
 		builder.setParentScreen(parent);
 		builder.setTitle(title);
@@ -70,6 +71,8 @@ public class GamerulesMenuFactory
 			@Override public <T extends Rule<T>> void visit(Key<T> key, Type<T> type){
 				IRuleCategory cat = GetCategory(key);
 				Identifier catId = cat.GetId();
+
+				vanillaCats.computeIfAbsent(catId, __-> key.getCategory());
 
 				tabs.computeIfAbsent(catId.getNamespace(), ns -> builder.getOrCreateCategory(Text.literal(ns)));
 				// var sub = subs.computeIfAbsent(catId, id -> entries.startSubCategory(cat.GetTitle()));
@@ -93,8 +96,12 @@ public class GamerulesMenuFactory
 			mA = a.getKey().getNamespace().equals("minecraft");
 			mB = b.getKey().getNamespace().equals("minecraft");
 
-			if (mA != mB) // Sort vanilla rules to the top.
+			// Sort vanilla categories above modded ones.
+			if (mA != mB)
 				return -Boolean.compare(mA, mB);
+			// Sort vanilla rules in the same order as the vanilla screen.
+			else if (mA && mB)
+				return vanillaCats.get(idA).compareTo(vanillaCats.get(idB));
 			else {
 				int diff = idA.getNamespace().compareTo(idB.getNamespace());
 				if (diff != 0)
