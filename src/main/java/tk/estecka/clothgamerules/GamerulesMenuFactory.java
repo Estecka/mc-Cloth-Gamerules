@@ -55,7 +55,6 @@ public class GamerulesMenuFactory
 		final ConfigBuilder builder = ConfigBuilder.create();
 		final ConfigEntryBuilder entries = builder.entryBuilder();
 
-		Map<String, ConfigCategory> tabs = new HashMap<>();
 		// Map<Identifier, SubCategoryBuilder> subs = new HashMap<>();
 		Map<Identifier, CategoryEntries> subs = new HashMap<>();
 		Map<Identifier, GameRules.Category> vanillaCats = new HashMap<>();
@@ -64,9 +63,6 @@ public class GamerulesMenuFactory
 		builder.setTitle(title);
 		builder.setSavingRunnable(() -> onClose.accept(Optional.of(rules)));
 
-		final var wildcard = builder.getOrCreateCategory(WILDCARD_TITLE);
-		builder.setFallbackCategory(wildcard);
-
 		GameRules.accept(new GameRules.Visitor() {
 			@Override public <T extends Rule<T>> void visit(Key<T> key, Type<T> type){
 				IRuleCategory cat = GetCategory(key);
@@ -74,7 +70,6 @@ public class GamerulesMenuFactory
 
 				vanillaCats.computeIfAbsent(catId, __-> key.getCategory());
 
-				tabs.computeIfAbsent(catId.getNamespace(), ns -> builder.getOrCreateCategory(Text.literal(ns)));
 				// var sub = subs.computeIfAbsent(catId, id -> entries.startSubCategory(cat.GetTitle()));
 				var sub = subs.computeIfAbsent(catId, id -> new CategoryEntries(entries, cat));
 
@@ -111,11 +106,13 @@ public class GamerulesMenuFactory
 			}
 		});
 
+		Map<String, ConfigCategory> tabs = new HashMap<>();
+		final var wildcard = builder.getOrCreateCategory(WILDCARD_TITLE);
 		for (var entry : sortedSubs.toList()) {
 			Identifier id = entry.getKey();
-			ConfigCategory tab = tabs.get(id.getNamespace());
 			// SubCategoryBuilder sub = entry.getValue();
 			CategoryEntries sub = entry.getValue();
+			ConfigCategory tab = tabs.computeIfAbsent(id.getNamespace(), ns -> builder.getOrCreateCategory(Text.literal(ns)));
 
 			// sub.setExpanded(true);
 			// tab.addEntry(sub.build());
@@ -124,6 +121,7 @@ public class GamerulesMenuFactory
 			sub.entries.forEach(e -> {tab.addEntry(e); wildcard.addEntry(e);});
 		}
 
+		builder.setFallbackCategory(wildcard);
 		return builder.build();
 	}
 
