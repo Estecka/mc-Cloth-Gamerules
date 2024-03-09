@@ -13,7 +13,6 @@ import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
 import me.shedaniel.clothconfig2.gui.entries.TextListEntry;
 import me.shedaniel.clothconfig2.impl.builders.AbstractFieldBuilder;
-import me.shedaniel.clothconfig2.impl.builders.StringFieldBuilder;
 import me.shedaniel.clothconfig2.impl.builders.SubCategoryBuilder;
 import me.shedaniel.clothconfig2.impl.builders.TextDescriptionBuilder;
 import net.fabricmc.fabric.api.gamerule.v1.CustomGameRuleCategory;
@@ -56,23 +55,21 @@ public class GamerulesMenuFactory
 		final ConfigBuilder builder = ConfigBuilder.create();
 		final ConfigEntryBuilder entries = builder.entryBuilder();
 
-		Map<String, ConfigCategory> tabs = new HashMap<>();
 		// Map<Identifier, SubCategoryBuilder> subs = new HashMap<>();
 		Map<Identifier, CategoryEntries> subs = new HashMap<>();
+		Map<Identifier, GameRules.Category> vanillaCats = new HashMap<>();
 
 		builder.setParentScreen(parent);
 		builder.setTitle(title);
 		builder.setSavingRunnable(() -> onClose.accept(Optional.of(rules)));
-
-		final var wildcard = builder.getOrCreateCategory(WILDCARD_TITLE);
-		builder.setFallbackCategory(wildcard);
 
 		GameRules.accept(new GameRules.Visitor() {
 			@Override public <T extends Rule<T>> void visit(Key<T> key, Type<T> type){
 				IRuleCategory cat = GetCategory(key);
 				Identifier catId = cat.GetId();
 
-				tabs.computeIfAbsent(catId.getNamespace(), ns -> builder.getOrCreateCategory(Text.literal(ns)));
+				vanillaCats.computeIfAbsent(catId, __-> key.getCategory());
+
 				// var sub = subs.computeIfAbsent(catId, id -> entries.startSubCategory(cat.GetTitle()));
 				var sub = subs.computeIfAbsent(catId, id -> new CategoryEntries(entries, cat));
 
@@ -88,12 +85,34 @@ public class GamerulesMenuFactory
 			}
 		});
 
+		var sortedSubs =  subs.entrySet().stream().sorted((a,b)->{
+			Identifier idA=a.getKey(), idB=b.getKey();
+			boolean mA, mB;
+			mA = a.getKey().getNamespace().equals("minecraft");
+			mB = b.getKey().getNamespace().equals("minecraft");
 
-		for (var entry : subs.entrySet()) {
+			// Sort vanilla categories above modded ones.
+			if (mA != mB)
+				return -Boolean.compare(mA, mB);
+			// Sort vanilla rules in the same order as the vanilla screen.
+			else if (mA && mB)
+				return vanillaCats.get(idA).compareTo(vanillaCats.get(idB));
+			else {
+				int diff = idA.getNamespace().compareTo(idB.getNamespace());
+				if (diff != 0)
+					return diff;
+				else
+					return idA.getPath().compareTo(idB.getPath());
+			}
+		});
+
+		Map<String, ConfigCategory> tabs = new HashMap<>();
+		final var wildcard = builder.getOrCreateCategory(WILDCARD_TITLE);
+		for (var entry : sortedSubs.toList()) {
 			Identifier id = entry.getKey();
-			ConfigCategory tab = tabs.get(id.getNamespace());
 			// SubCategoryBuilder sub = entry.getValue();
 			CategoryEntries sub = entry.getValue();
+			ConfigCategory tab = tabs.computeIfAbsent(id.getNamespace(), ns -> builder.getOrCreateCategory(Text.literal(ns)));
 
 			// sub.setExpanded(true);
 			// tab.addEntry(sub.build());
@@ -102,6 +121,7 @@ public class GamerulesMenuFactory
 			sub.entries.forEach(e -> {tab.addEntry(e); wildcard.addEntry(e);});
 		}
 
+		builder.setFallbackCategory(wildcard);
 		return builder.build();
 	}
 
