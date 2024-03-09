@@ -13,7 +13,6 @@ import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
 import me.shedaniel.clothconfig2.gui.entries.TextListEntry;
 import me.shedaniel.clothconfig2.impl.builders.AbstractFieldBuilder;
-import me.shedaniel.clothconfig2.impl.builders.StringFieldBuilder;
 import me.shedaniel.clothconfig2.impl.builders.SubCategoryBuilder;
 import me.shedaniel.clothconfig2.impl.builders.TextDescriptionBuilder;
 import net.fabricmc.fabric.api.gamerule.v1.CustomGameRuleCategory;
@@ -88,8 +87,24 @@ public class GamerulesMenuFactory
 			}
 		});
 
+		var sortedSubs =  subs.entrySet().stream().sorted((a,b)->{
+			Identifier idA=a.getKey(), idB=b.getKey();
+			boolean mA, mB;
+			mA = a.getKey().getNamespace().equals("minecraft");
+			mB = b.getKey().getNamespace().equals("minecraft");
 
-		for (var entry : subs.entrySet()) {
+			if (mA != mB) // Sort vanilla rules to the top.
+				return -Boolean.compare(mA, mB);
+			else {
+				int diff = idA.getNamespace().compareTo(idB.getNamespace());
+				if (diff != 0)
+					return diff;
+				else
+					return idA.getPath().compareTo(idB.getPath());
+			}
+		});
+
+		for (var entry : sortedSubs.toList()) {
 			Identifier id = entry.getKey();
 			ConfigCategory tab = tabs.get(id.getNamespace());
 			// SubCategoryBuilder sub = entry.getValue();
