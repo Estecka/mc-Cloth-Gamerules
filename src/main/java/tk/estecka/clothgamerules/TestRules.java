@@ -21,7 +21,7 @@ implements ModInitializer
 	public void onInitialize() {
 		if (FabricLoader.getInstance().isDevelopmentEnvironment())
 		{
-			CustomGameRuleCategory category = new CustomGameRuleCategory(new Identifier("cloth-gamerules", "test_rules"), Text.literal("Test Rules"));
+			CustomGameRuleCategory category = new CustomGameRuleCategory(Identifier.of("cloth-gamerules", "test_rules"), Text.literal("Test Rules"));
 			GameRuleRegistry.register("clothrule.bool",   category, GameRuleFactory.createBooleanRule(true));
 			GameRuleRegistry.register("clothrule.int",    category, GameRuleFactory.createIntRule(1));
 			GameRuleRegistry.register("clothrule.double", category, GameRuleFactory.createDoubleRule(1.0));

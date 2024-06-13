@@ -23,7 +23,7 @@ public interface IRuleCategory
 			}
 		
 			@Override public Identifier GetId(){
-				return new Identifier("minecraft", vanilla.getCategory().replace('.', '_'));
+				return Identifier.of("minecraft", vanilla.getCategory().replace('.', '_'));
 			}
 			
 		};
