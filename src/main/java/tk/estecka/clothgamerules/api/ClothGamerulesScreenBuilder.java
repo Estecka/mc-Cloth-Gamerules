@@ -19,6 +19,7 @@ import net.fabricmc.fabric.api.gamerule.v1.CustomGameRuleCategory;
 import net.fabricmc.fabric.api.gamerule.v1.rule.EnumRule;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.resource.language.I18n;
+import net.minecraft.resource.featuretoggle.FeatureFlags;
 import net.minecraft.resource.featuretoggle.FeatureSet;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
@@ -30,32 +31,24 @@ import tk.estecka.clothgamerules.IRuleString;
 
 public final class ClothGamerulesScreenBuilder
 {
+	static private final FeatureSet ALL_FEATURES = FeatureFlags.FEATURE_MANAGER.getFeatureSet();
 	static public final Text DEFAULT_TITLE = Text.translatable("editGamerule.title");
-	static private final Text WILDCARD_TITLE = Text.translatable("cloth-gamerules.wildcardTab").formatted(Formatting.YELLOW);
-	static private final Text MISSING_WIDGET = Text.empty().formatted(Formatting.RED)
-		.append("(")
-		.append(Text.translatable("cloth-gamerules.missing_widget"))
-		.append(")")
-		;
 
-	private final FeatureSet features;
-	private final Map<String, GameRules> displayValues = new LinkedHashMap<>();
-	private GameRules rules;
-	private GameRules resetValues;
+	private GameRules rules = new GameRules(ALL_FEATURES);
+	private GameRules resetValues = new GameRules(ALL_FEATURES);
 	private Screen parent = null;
 	private Text title = DEFAULT_TITLE;
 	private Consumer<Optional<GameRules>> onClosed = (_0)->{};
 
-	public ClothGamerulesScreenBuilder(FeatureSet features){
-		this.features = features;
-		this.rules = new GameRules(features);
-		this.resetValues = new GameRules(features);
-		this.displayValues.put("editGamerule.default", new GameRules(features));
+	private final Map<String, GameRules> displayValues = new LinkedHashMap<>();
+	{
+		displayValues.put("editGamerule.default", new GameRules(ALL_FEATURES));
 	}
 
-	public ClothGamerulesScreenBuilder(){
-		this(FeatureSet.empty());
-	}
+
+/******************************************************************************/
+/* # Buider config                                                            */
+/******************************************************************************/
 
 	public ClothGamerulesScreenBuilder Parent(Screen parent) {
 		this.parent = parent;
@@ -73,19 +66,31 @@ public final class ClothGamerulesScreenBuilder
 	}
 
 	public ClothGamerulesScreenBuilder ActiveValues(GameRules activeValues) {
-		this.rules = activeValues.copy(this.features);
+		this.rules = activeValues;
 		return this;
 	}
 
 	public ClothGamerulesScreenBuilder ResetValues(GameRules resetValues){
-		this.resetValues = resetValues.copy(this.features);
+		this.resetValues = resetValues.copy(ALL_FEATURES);
 		return this;
 	}
 
 	public ClothGamerulesScreenBuilder DisplayValues(String translationKey, GameRules values){
-		this.displayValues.put(translationKey, values.copy(this.features));
+		this.displayValues.put(translationKey, values.copy(ALL_FEATURES));
 		return this;
 	}
+
+
+/******************************************************************************/
+/* # Building process                                                         */
+/******************************************************************************/
+
+	static private final Text WILDCARD_TITLE = Text.translatable("cloth-gamerules.wildcardTab").formatted(Formatting.YELLOW);
+	static private final Text MISSING_WIDGET = Text.empty().formatted(Formatting.RED)
+		.append("(")
+		.append(Text.translatable("cloth-gamerules.missing_widget"))
+		.append(")")
+		;
 
 	/**
 	 * https://github.com/shedaniel/cloth-config/issues/245

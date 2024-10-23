@@ -6,16 +6,8 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
 import net.minecraft.world.GameRules;
 
-/**
- * @deprecated Use {@link tk.estecka.clothgamerules.api.ClothGamerulesScreenBuilder} instead.
- * This API  assumes  all  experimental  features  are  disabled, and  may cause
- * crashes  with the new  Minecart Experiment. Adding  more overload  with extra
- * parameters is no longer sustainable.
- */
-@Deprecated(forRemoval=true)
 public interface ClothGamerulesScreenFactory
 {
-
 	static public Screen CreateScreen(Screen parent, GameRules rules, Consumer<Optional<GameRules>> onClose){
 		return new ClothGamerulesScreenBuilder().Parent(parent).ActiveValues(rules).OnClosed(onClose).Build();
 	}

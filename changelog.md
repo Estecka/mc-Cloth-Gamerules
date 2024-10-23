@@ -12,8 +12,7 @@ Initial release
 ### 1.1.2
 - Marked as incompatible with MC 1.21.2
 
-
-# v2
+## 1.2
 - Ported to MC 1.21.2
 - Marked old API as deprecated.
 - Added new Builder-based API.
