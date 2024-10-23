@@ -31,6 +31,11 @@ public class CreateWorldMoreTabMixin
 	
 	@ModifyArg( method="openGameRulesScreen", expect=1, at=@At(value="INVOKE", target="net/minecraft/client/MinecraftClient.setScreen (Lnet/minecraft/client/gui/screen/Screen;)V") )
 	private Screen ReplaceGameruleScreen(Screen original, @Share("rules") LocalRef<GameRules> ruleRef, @Share("consumer") LocalRef<Consumer<Optional<GameRules>>> consumerRef){
-		return ClothGamerulesScreenFactory.CreateScreen(field_42178, ruleRef.get(), consumerRef.get());
+		return new ClothGamerulesScreenFactory.Builder(field_42178.getWorldCreator().getGeneratorOptionsHolder().dataConfiguration().enabledFeatures())
+			.Parent(field_42178)
+			.ActiveValues(ruleRef.get())
+			.OnClosed(consumerRef.get())
+			.Build()
+			;
 	}
 }
