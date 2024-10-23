@@ -62,7 +62,7 @@ public class GamerulesMenuFactory
 		builder.setTitle(title);
 		builder.setSavingRunnable(() -> onClose.accept(Optional.of(rules)));
 
-		GameRules.accept(new GameRules.Visitor() {
+		rules.accept(new GameRules.Visitor() {
 			@Override public <T extends Rule<T>> void visit(Key<T> key, Type<T> type){
 				IRuleCategory cat = GetCategory(key);
 				Identifier catId = cat.GetId();
@@ -154,7 +154,7 @@ public class GamerulesMenuFactory
 		IRuleString validateableRule = IRuleString.Of(rule);
 		if (validateableRule != null){
 			field = entryBuilder.startStrField(displayName, validateableRule.GetValue())
-				.setSaveConsumer(s -> validateableRule.Validate(nameKey))
+				.setSaveConsumer(s -> validateableRule.TryParse(nameKey))
 				.setErrorSupplier(validateableRule::ErrorProvider)
 				.setDefaultValue(resetValue.serialize())
 				;
