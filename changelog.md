@@ -9,3 +9,12 @@ Initial release
 - Vanilla categories and tab are now sorted before modded ones.
 ### 1.1.1
 - Updated for MC-1.21
+### 1.1.2
+- Marked as incompatible with MC 1.21.2
+
+
+# v2
+- Ported to MC 1.21.2
+- Marked old API as deprecated.
+- Added new Builder-based API.
+- Removed circular dependency with Preferred-Gamerules
