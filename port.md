@@ -5,3 +5,5 @@ Initial Release
 ### 1.21.2
 #### No Workarounds:
 - `Gamerules.accept` is no longer static
+#### Yarn Mappings
+- Some rules' `validate` were renamed to `validateAndSet`
