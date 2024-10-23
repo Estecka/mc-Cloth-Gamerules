@@ -9,9 +9,10 @@
 	],
 	"contact": {
 		"homepage": "https://modrinth.com/mod/cloth-gamerules/",
-		"sources": "https://github.com/Estecka/mc-Cloth-Gamerules"
+		"sources": "https://github.com/Estecka/mc-Cloth-Gamerules",
+		"issues":  "https://github.com/Estecka/mc-Cloth-Gamerules/issues"
 	},
-	"license": "GNU AGPLv3",
+	"license": "MIT",
 	"icon": "assets/cloth-gamerules/icon.png",
 	"environment": "*",
 	"entrypoints": {
@@ -26,11 +27,11 @@
 		"cloth-gamerules.mixins.json"
 	],
 	"depends": {
-		"minecraft": "*",
 		"cloth-config": "*",
+		"minecraft": "<1.21.2",
 		"fabricloader": ">=0.15.7",
-		"java": ">=17",
-		"fabric-api": "*"
+		"fabric-api": "*",
+		"java": ">=17"
 	},
 	"recommends": {
 		"cloth-config": ">=10.1.117",
