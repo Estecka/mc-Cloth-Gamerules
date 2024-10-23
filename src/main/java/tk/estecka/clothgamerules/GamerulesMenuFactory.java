@@ -24,7 +24,6 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.GameRules.*;
-import tk.estecka.preferredgamerules.IRuleFactory;
 
 public class GamerulesMenuFactory
 {
@@ -141,13 +140,7 @@ public class GamerulesMenuFactory
 		if (I18n.hasTranslation(descKey))
 			tooltip.add(Text.translatable(descKey));
 
-		if (ClothGamerules.IS_PREFRULE_INSTALLED){
-			var factory = IRuleFactory.Of(type);
-			tooltip.add(Text.translatable("editGamerule.preferred", factory.preferredgamerules$CreatePreferredRule().serialize()).formatted(Formatting.GRAY));
-			tooltip.add(Text.translatable("editGamerule.default",   factory.preferredgamerules$CreateDefaultRule  ().serialize()).formatted(Formatting.GRAY));
-		}
-		else
-			tooltip.add(Text.translatable("editGamerule.default", type.createRule().serialize()).formatted(Formatting.GRAY));
+		tooltip.add(Text.translatable("editGamerule.default", type.createRule().serialize()).formatted(Formatting.GRAY));
 
 		return Optional.of(tooltip.toArray(new Text[1]));
 	}
