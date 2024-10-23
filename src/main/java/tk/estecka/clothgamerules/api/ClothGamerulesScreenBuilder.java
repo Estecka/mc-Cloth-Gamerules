@@ -75,8 +75,11 @@ public final class ClothGamerulesScreenBuilder
 		return this;
 	}
 
-	public ClothGamerulesScreenBuilder DisplayValues(String translationKey, GameRules values){
-		this.displayValues.put(translationKey, values.copy(ALL_FEATURES));
+	public ClothGamerulesScreenBuilder DisplayValues(String translationKey, @Nullable GameRules values){
+		if (values == null)
+			this.displayValues.remove(translationKey);
+		else
+			this.displayValues.put(translationKey, values.copy(ALL_FEATURES));
 		return this;
 	}
 
