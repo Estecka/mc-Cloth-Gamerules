@@ -14,6 +14,5 @@ Initial release
 
 ## 1.2
 - Ported to MC 1.21.2
-- Marked old API as deprecated.
-- Added new Builder-based API.
+- Added a builder-based API, allowing custom tooltip display values.
 - Removed circular dependency with Preferred-Gamerules
