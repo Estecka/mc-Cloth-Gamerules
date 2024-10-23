@@ -3,6 +3,7 @@ package tk.estecka.clothgamerules;
 import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.resource.featuretoggle.FeatureSet;
 import net.minecraft.text.Text;
 import net.minecraft.world.GameRules;
 import tk.estecka.clothgamerules.api.ClothGamerulesScreenFactory;
@@ -15,6 +16,6 @@ implements ModMenuApi
 	}
 
 	public Screen	getModConfigScreen(Screen parent){
-		return ClothGamerulesScreenFactory.CreateScreen(parent, Text.literal("Test Screen"), new GameRules(), noop->{});
+		return ClothGamerulesScreenFactory.CreateScreen(parent, Text.literal("Test Screen"), new GameRules(FeatureSet.empty()), noop->{});
 	}
 }

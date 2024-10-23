@@ -1,7 +1,8 @@
-package tk.estecka.clothgamerules;
+package tk.estecka.clothgamerules.api;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -13,30 +14,93 @@ import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
 import me.shedaniel.clothconfig2.gui.entries.TextListEntry;
 import me.shedaniel.clothconfig2.impl.builders.AbstractFieldBuilder;
-import me.shedaniel.clothconfig2.impl.builders.SubCategoryBuilder;
 import me.shedaniel.clothconfig2.impl.builders.TextDescriptionBuilder;
 import net.fabricmc.fabric.api.gamerule.v1.CustomGameRuleCategory;
 import net.fabricmc.fabric.api.gamerule.v1.rule.EnumRule;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.resource.language.I18n;
+import net.minecraft.resource.featuretoggle.FeatureFlags;
+import net.minecraft.resource.featuretoggle.FeatureSet;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.GameRules.*;
-import tk.estecka.preferredgamerules.IRuleFactory;
+import tk.estecka.clothgamerules.IRuleCategory;
+import tk.estecka.clothgamerules.IRuleString;
 
-public class GamerulesMenuFactory
+public final class ClothGamerulesScreenBuilder
 {
+	static private final FeatureSet ALL_FEATURES = FeatureFlags.FEATURE_MANAGER.getFeatureSet();
 	static public final Text DEFAULT_TITLE = Text.translatable("editGamerule.title");
+
+	private GameRules rules = new GameRules(ALL_FEATURES);
+	private GameRules resetValues = new GameRules(ALL_FEATURES);
+	private Screen parent = null;
+	private Text title = DEFAULT_TITLE;
+	private Consumer<Optional<GameRules>> onClosed = (_0)->{};
+
+	private final Map<String, GameRules> displayValues = new LinkedHashMap<>();
+	{
+		displayValues.put("editGamerule.default", new GameRules(ALL_FEATURES));
+	}
+
+
+/******************************************************************************/
+/* # Buider config                                                            */
+/******************************************************************************/
+
+	public ClothGamerulesScreenBuilder Parent(Screen parent) {
+		this.parent = parent;
+		return this;
+	}
+
+	public ClothGamerulesScreenBuilder Title(Text title) {
+		this.title = title;
+		return this;
+	}
+
+	public ClothGamerulesScreenBuilder OnClosed(Consumer<Optional<GameRules>> onClosed) {
+		this.onClosed = onClosed;
+		return this;
+	}
+
+	public ClothGamerulesScreenBuilder ActiveValues(GameRules activeValues) {
+		this.rules = activeValues;
+		return this;
+	}
+
+	public ClothGamerulesScreenBuilder ResetValues(GameRules resetValues){
+		this.resetValues = resetValues.copy(ALL_FEATURES);
+		return this;
+	}
+
+	public ClothGamerulesScreenBuilder DisplayValues(String translationKey, @Nullable GameRules values){
+		if (values == null)
+			this.displayValues.remove(translationKey);
+		else
+			this.displayValues.put(translationKey, values.copy(ALL_FEATURES));
+		return this;
+	}
+
+
+/******************************************************************************/
+/* # Building process                                                         */
+/******************************************************************************/
+
 	static private final Text WILDCARD_TITLE = Text.translatable("cloth-gamerules.wildcardTab").formatted(Formatting.YELLOW);
+	static private final Text MISSING_WIDGET = Text.empty().formatted(Formatting.RED)
+		.append("(")
+		.append(Text.translatable("cloth-gamerules.missing_widget"))
+		.append(")")
+		;
 
 	/**
 	 * https://github.com/shedaniel/cloth-config/issues/245
 	 * Cloth's subcategories don't  seem to work well with the search bar. Until
 	 * this is sorted out, I'm mocking them up with text descriptions.
 	 */
-	static class CategoryEntries {
+	static private class CategoryEntries {
 		public final TextListEntry header;
 		public final List<AbstractConfigListEntry<?>> entries = new ArrayList<>();
 
@@ -45,13 +109,7 @@ public class GamerulesMenuFactory
 		}
 	};
 
-	static public final Text MISSING_WIDGET = Text.empty().formatted(Formatting.RED)
-		.append("(")
-		.append(Text.translatable("cloth-gamerules.missing_widget"))
-		.append(")")
-		;
-
-	static public Screen CreateScreen(Screen parent, Text title, GameRules rules, GameRules resetValues, Consumer<Optional<GameRules>> onClose){
+	public Screen Build(){
 		final ConfigBuilder builder = ConfigBuilder.create();
 		final ConfigEntryBuilder entries = builder.entryBuilder();
 
@@ -61,9 +119,9 @@ public class GamerulesMenuFactory
 
 		builder.setParentScreen(parent);
 		builder.setTitle(title);
-		builder.setSavingRunnable(() -> onClose.accept(Optional.of(rules)));
+		builder.setSavingRunnable(() -> onClosed.accept(Optional.of(rules)));
 
-		GameRules.accept(new GameRules.Visitor() {
+		rules.accept(new GameRules.Visitor() {
 			@Override public <T extends Rule<T>> void visit(Key<T> key, Type<T> type){
 				IRuleCategory cat = GetCategory(key);
 				Identifier catId = cat.GetId();
@@ -125,7 +183,7 @@ public class GamerulesMenuFactory
 		return builder.build();
 	}
 
-	static public IRuleCategory GetCategory(Key<?> key){
+	static private IRuleCategory GetCategory(Key<?> key){
 		var custom = CustomGameRuleCategory.getCategory(key);
 		if (custom.isPresent())
 			return IRuleCategory.Of(custom.get());
@@ -133,7 +191,7 @@ public class GamerulesMenuFactory
 			return IRuleCategory.Of(key.getCategory());
 	}
 
-	static public Optional<Text[]>	CreateTooltip(Key<?> key, Type<?> type){
+	private Optional<Text[]>	CreateTooltip(Key<?> key, Type<?> type){
 		ArrayList<Text> tooltip = new ArrayList<>(4);
 		String descKey = key.getTranslationKey()+".description";
 
@@ -141,18 +199,17 @@ public class GamerulesMenuFactory
 		if (I18n.hasTranslation(descKey))
 			tooltip.add(Text.translatable(descKey));
 
-		if (ClothGamerules.IS_PREFRULE_INSTALLED){
-			var factory = IRuleFactory.Of(type);
-			tooltip.add(Text.translatable("editGamerule.preferred", factory.preferredgamerules$CreatePreferredRule().serialize()).formatted(Formatting.GRAY));
-			tooltip.add(Text.translatable("editGamerule.default",   factory.preferredgamerules$CreateDefaultRule  ().serialize()).formatted(Formatting.GRAY));
+		for (var entry : this.displayValues.entrySet()){
+			tooltip.add(
+				Text.translatable(entry.getKey(),entry.getValue().get(key).serialize())
+				.formatted(Formatting.GRAY)
+			);
 		}
-		else
-			tooltip.add(Text.translatable("editGamerule.default", type.createRule().serialize()).formatted(Formatting.GRAY));
 
 		return Optional.of(tooltip.toArray(new Text[1]));
 	}
 
-	static public <T extends Rule<T>> @Nullable AbstractFieldBuilder<?,?,?>	StartRuleField(ConfigEntryBuilder entryBuilder, Key<T> key, Type<T> type, Rule<T> rule, Rule<T> resetValue) {
+	private <T extends Rule<T>> @Nullable AbstractFieldBuilder<?,?,?>	StartRuleField(ConfigEntryBuilder entryBuilder, Key<T> key, Type<T> type, Rule<T> rule, Rule<T> resetValue) {
 		AbstractFieldBuilder<?,?,?> field = null;
 
 		String nameKey = key.getTranslationKey();
@@ -161,7 +218,7 @@ public class GamerulesMenuFactory
 		IRuleString validateableRule = IRuleString.Of(rule);
 		if (validateableRule != null){
 			field = entryBuilder.startStrField(displayName, validateableRule.GetValue())
-				.setSaveConsumer(s -> validateableRule.Validate(nameKey))
+				.setSaveConsumer(s -> validateableRule.TryParse(nameKey))
 				.setErrorSupplier(validateableRule::ErrorProvider)
 				.setDefaultValue(resetValue.serialize())
 				;
@@ -188,7 +245,7 @@ public class GamerulesMenuFactory
 		return field;
 	}
 
-	static public TextDescriptionBuilder	StartMissingType(ConfigEntryBuilder entryBuilder, Key<?> key, Type<?> type){
+	private TextDescriptionBuilder	StartMissingType(ConfigEntryBuilder entryBuilder, Key<?> key, Type<?> type){
 		Text text = Text.translatable(key.getTranslationKey()).formatted(Formatting.GRAY)
 			.append(" ")
 			.append(MISSING_WIDGET)
@@ -198,5 +255,4 @@ public class GamerulesMenuFactory
 		entry.setTooltipSupplier(() -> CreateTooltip(key, type));
 		return entry;
 	}
-
 }

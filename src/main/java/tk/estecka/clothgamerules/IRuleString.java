@@ -7,9 +7,9 @@ import net.minecraft.text.Text;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.GameRules.IntRule;
 
-public interface IRuleString 
+public interface IRuleString
 {
-	boolean Validate(String value);
+	boolean TryParse(String value);
 	String GetValue();
 
 	default String GetErrorString(){
@@ -17,7 +17,7 @@ public interface IRuleString
 	}
 
 	default Optional<Text> ErrorProvider(String value){
-		return this.Validate(value) ?
+		return this.TryParse(value) ?
 			Optional.empty():
 			Optional.of(Text.translatable(this.GetErrorString(), value));
 	}
@@ -35,7 +35,7 @@ public interface IRuleString
 
 	static public IRuleString Of(IntRule rule) {
 		return new IRuleString() {
-			@Override public boolean Validate(String value){ return rule.validate(value); }
+			@Override public boolean TryParse(String value){ return rule.validateAndSet(value); }
 			@Override public String GetValue(){ return String.valueOf(rule.get()); }
 			@Override public String GetErrorString() { return "parsing.int.invalid"; }
 		};
@@ -43,7 +43,7 @@ public interface IRuleString
 	
 	static public IRuleString Of(DoubleRule rule) {
 		return new IRuleString() {
-			@Override public boolean Validate(String value){ return rule.validate(value); }
+			@Override public boolean TryParse(String value){ return rule.validate(value); }
 			@Override public String GetValue(){ return String.valueOf(rule.get()); }
 			@Override public String GetErrorString() { return "parsing.double.invalid"; }
 		};
