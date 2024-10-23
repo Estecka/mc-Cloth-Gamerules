@@ -8,7 +8,7 @@ Initial release
 - Vanilla categories are sorted in the same order as in the vanilla screen.
 - Vanilla categories and tab are now sorted before modded ones.
 ### 1.1.1
-- Updated for MC-1.21
+- Updated for MC 1.21
 ### 1.1.2
 - Marked as incompatible with MC 1.21.2
 
