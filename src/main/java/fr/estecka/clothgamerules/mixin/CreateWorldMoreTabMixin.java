@@ -1,4 +1,4 @@
-package tk.estecka.clothgamerules.mixin;
+package fr.estecka.clothgamerules.mixin;
 
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -14,7 +14,7 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.world.CreateWorldScreen;
 import net.minecraft.client.gui.screen.world.EditGameRulesScreen;
 import net.minecraft.world.GameRules;
-import tk.estecka.clothgamerules.api.ClothGamerulesScreenFactory;
+import fr.estecka.clothgamerules.api.ClothGamerulesScreenBuilder;
 
 @Mixin(targets="net/minecraft/client/gui/screen/world/CreateWorldScreen$MoreTab")
 public class CreateWorldMoreTabMixin 
@@ -31,7 +31,7 @@ public class CreateWorldMoreTabMixin
 	
 	@ModifyArg( method="openGameRulesScreen", expect=1, at=@At(value="INVOKE", target="net/minecraft/client/MinecraftClient.setScreen (Lnet/minecraft/client/gui/screen/Screen;)V") )
 	private Screen ReplaceGameruleScreen(Screen original, @Share("rules") LocalRef<GameRules> ruleRef, @Share("consumer") LocalRef<Consumer<Optional<GameRules>>> consumerRef){
-		return new ClothGamerulesScreenFactory.Builder(field_42178.getWorldCreator().getGeneratorOptionsHolder().dataConfiguration().enabledFeatures())
+		return new ClothGamerulesScreenBuilder(field_42178.getWorldCreator().getGeneratorOptionsHolder().dataConfiguration().enabledFeatures())
 			.Parent(field_42178)
 			.ActiveValues(ruleRef.get())
 			.OnClosed(consumerRef.get())

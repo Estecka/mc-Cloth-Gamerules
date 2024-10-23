@@ -3,70 +3,33 @@ package tk.estecka.clothgamerules.api;
 import java.util.Optional;
 import java.util.function.Consumer;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.resource.featuretoggle.FeatureSet;
 import net.minecraft.text.Text;
 import net.minecraft.world.GameRules;
-import tk.estecka.clothgamerules.GamerulesMenuFactory;
+import fr.estecka.clothgamerules.api.ClothGamerulesScreenBuilder;
 
+/**
+ * @deprecated Use {@link fr.estecka.clothgamerules.api.ClothGamerulesScreenBuilder} instead.
+ * This API  assumes  all  experimental  features  are  disabled, and  may cause
+ * crashes  with the new  Minecart Experiment. Adding  more overload  with extra
+ * parameters is no longer sustainable.
+ */
+@Deprecated(forRemoval=true)
 public interface ClothGamerulesScreenFactory
 {
-	public class Builder
-	{
-		private final FeatureSet features;
-		private GameRules activeRules;
-		private GameRules resetRules;
-
-		private Screen parent = null;
-		private Text title = GamerulesMenuFactory.DEFAULT_TITLE;
-		private Consumer<Optional<GameRules>> onClosed = (_0)->{};
-
-		public Builder(FeatureSet features){
-			this.features = features;
-			this.activeRules = new GameRules(features);
-			this.resetRules = new GameRules(features);
-		}
-
-		public Builder(){
-			this(FeatureSet.empty());
-		}
-
-		public Builder Parent(Screen parent) { this.parent = parent; return this; }
-		public Builder Title(Text title) { this.title = title; return this; }
-		public Builder OnClosed(Consumer<Optional<GameRules>> onClosed) { this.onClosed = onClosed; return this; }
-
-		public Builder ActiveValues(GameRules activeValues) {
-			this.activeRules = activeValues.copy(this.features);
-			return this;
-		}
-		public Builder ResetValues(GameRules resetValues){
-			this.resetRules = resetValues.copy(this.features);
-			return this;
-		}
-
-		public Screen Build(){
-			return GamerulesMenuFactory.CreateScreen(
-				parent,
-				title,
-				activeRules,
-				resetRules,
-				onClosed
-			);
-		}
-	}
 
 	static public Screen CreateScreen(Screen parent, GameRules rules, Consumer<Optional<GameRules>> onClose){
-		return new Builder().Parent(parent).ActiveValues(rules).OnClosed(onClose).Build();
+		return new ClothGamerulesScreenBuilder().Parent(parent).ActiveValues(rules).OnClosed(onClose).Build();
 	}
 
 	static public Screen CreateScreen(Screen parent, GameRules rules, GameRules resetValues, Consumer<Optional<GameRules>> onClose){
-		return new Builder().Parent(parent).ActiveValues(rules).ResetValues(resetValues).OnClosed(onClose).Build();
+		return new ClothGamerulesScreenBuilder().Parent(parent).ActiveValues(rules).ResetValues(resetValues).OnClosed(onClose).Build();
 	}
 
 	static public Screen CreateScreen(Screen parent, Text title, GameRules rules, Consumer<Optional<GameRules>> onClose){
-		return new Builder().Parent(parent).Title(title).ActiveValues(rules).OnClosed(onClose).Build();
+		return new ClothGamerulesScreenBuilder().Parent(parent).Title(title).ActiveValues(rules).OnClosed(onClose).Build();
 	}
 
 	static public Screen CreateScreen(Screen parent, Text title, GameRules rules, GameRules resetValues, Consumer<Optional<GameRules>> onClose){
-		return new Builder().Parent(parent).Title(title).ActiveValues(rules).ResetValues(resetValues).OnClosed(onClose).Build();
+		return new ClothGamerulesScreenBuilder().Parent(parent).Title(title).ActiveValues(rules).ResetValues(resetValues).OnClosed(onClose).Build();
 	}
 }

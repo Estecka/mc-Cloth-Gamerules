@@ -1,4 +1,4 @@
-package tk.estecka.clothgamerules;
+package fr.estecka.clothgamerules;
 
 import java.util.ArrayList;
 import java.util.HashMap;

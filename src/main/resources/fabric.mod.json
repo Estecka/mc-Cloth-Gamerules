@@ -17,10 +17,10 @@
 	"environment": "*",
 	"entrypoints": {
 		"main": [
-			"tk.estecka.clothgamerules.TestRules"
+			"fr.estecka.clothgamerules.TestRules"
 		],
 		"modmenu": [
-			"tk.estecka.clothgamerules.ModMenu"
+			"fr.estecka.clothgamerules.ModMenu"
 		]
 	},
 	"mixins": [

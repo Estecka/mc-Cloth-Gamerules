@@ -1,4 +1,4 @@
-package tk.estecka.clothgamerules;
+package fr.estecka.clothgamerules;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

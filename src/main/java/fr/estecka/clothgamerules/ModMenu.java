@@ -1,4 +1,4 @@
-package tk.estecka.clothgamerules;
+package fr.estecka.clothgamerules;
 
 import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;
