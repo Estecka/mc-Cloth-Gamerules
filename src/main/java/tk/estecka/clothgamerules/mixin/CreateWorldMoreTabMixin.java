@@ -1,4 +1,4 @@
-package fr.estecka.clothgamerules.mixin;
+package tk.estecka.clothgamerules.mixin;
 
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -14,7 +14,7 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.world.CreateWorldScreen;
 import net.minecraft.client.gui.screen.world.EditGameRulesScreen;
 import net.minecraft.world.GameRules;
-import fr.estecka.clothgamerules.api.ClothGamerulesScreenBuilder;
+import tk.estecka.clothgamerules.api.ClothGamerulesScreenBuilder;
 
 @Mixin(targets="net/minecraft/client/gui/screen/world/CreateWorldScreen$MoreTab")
 public class CreateWorldMoreTabMixin 

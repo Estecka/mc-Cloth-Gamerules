@@ -1,4 +1,4 @@
-package fr.estecka.clothgamerules;
+package tk.estecka.clothgamerules;
 
 import java.util.Optional;
 import org.jetbrains.annotations.Nullable;

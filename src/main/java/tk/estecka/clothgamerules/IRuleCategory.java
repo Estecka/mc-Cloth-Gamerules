@@ -1,4 +1,4 @@
-package fr.estecka.clothgamerules;
+package tk.estecka.clothgamerules;
 
 import net.fabricmc.fabric.api.gamerule.v1.CustomGameRuleCategory;
 import net.minecraft.text.Text;

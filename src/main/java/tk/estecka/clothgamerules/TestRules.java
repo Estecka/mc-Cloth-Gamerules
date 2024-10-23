@@ -1,4 +1,4 @@
-package fr.estecka.clothgamerules;
+package tk.estecka.clothgamerules;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.gamerule.v1.CustomGameRuleCategory;

@@ -1,4 +1,4 @@
-package fr.estecka.clothgamerules.api;
+package tk.estecka.clothgamerules.api;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -8,8 +8,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 import org.jetbrains.annotations.Nullable;
-import fr.estecka.clothgamerules.IRuleCategory;
-import fr.estecka.clothgamerules.IRuleString;
 import me.shedaniel.clothconfig2.api.AbstractConfigListEntry;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
@@ -27,6 +25,8 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.GameRules.*;
+import tk.estecka.clothgamerules.IRuleCategory;
+import tk.estecka.clothgamerules.IRuleString;
 
 public final class ClothGamerulesScreenBuilder
 {
