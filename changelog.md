@@ -13,6 +13,9 @@ Initial release
 - Marked as incompatible with MC 1.21.2
 
 ## 1.2
+### 1.2.0
 - Ported to MC 1.21.2
 - Added a builder-based API, allowing custom tooltip display values.
 - Removed circular dependency with Preferred-Gamerules
+### 1.2.1
+- Updated for MC 1.21.11
