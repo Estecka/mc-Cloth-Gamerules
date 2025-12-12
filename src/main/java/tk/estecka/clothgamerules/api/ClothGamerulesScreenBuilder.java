@@ -200,7 +200,7 @@ public final class ClothGamerulesScreenBuilder
 		ArrayList<Text> tooltip = new ArrayList<>(4);
 		String descKey = key.getTranslationKey()+".description";
 
-		tooltip.add(Text.literal(key.getId().toString()).formatted(Formatting.YELLOW));
+		tooltip.add(Text.literal(key.getId().toShortString()).formatted(Formatting.YELLOW));
 		if (I18n.hasTranslation(descKey))
 			tooltip.add(Text.translatable(descKey));
 
