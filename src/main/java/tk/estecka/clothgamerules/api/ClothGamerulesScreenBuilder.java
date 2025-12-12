@@ -219,7 +219,7 @@ public final class ClothGamerulesScreenBuilder
 /* # Field Builders                                                           */
 /******************************************************************************/
 
-	private <T> @Nullable AbstractFieldBuilder<?,?,?>	StartRuleField(ConfigEntryBuilder entryBuilder, RuleEntry<T> entry) {
+	private <T> AbstractFieldBuilder<?,?,?>	StartRuleField(ConfigEntryBuilder entryBuilder, RuleEntry<T> entry) {
 		Object ruleType = entry.GetType();
 
 		AbstractFieldBuilder<?,?,?> field = switch (ruleType) {
@@ -234,7 +234,7 @@ public final class ClothGamerulesScreenBuilder
 		return field;
 	}
 
-	private @Nullable AbstractFieldBuilder<?,?,?> StartBoolField(ConfigEntryBuilder entryBuilder, RuleEntry<Boolean> entry) {
+	private AbstractFieldBuilder<?,?,?> StartBoolField(ConfigEntryBuilder entryBuilder, RuleEntry<Boolean> entry) {
 		return entryBuilder.startBooleanToggle(entry.GetDisplayName(), entry.GetValue())
 			.setSaveConsumer(entry::SetValue)
 			.setErrorSupplier(entry::ErrorProvider)
@@ -242,7 +242,7 @@ public final class ClothGamerulesScreenBuilder
 			;
 	}
 
-	private @Nullable <T extends Enum<T>> AbstractFieldBuilder<?,?,?> StartEnumField(ConfigEntryBuilder entryBuilder, RuleEntry<T> entry) {
+	private <T extends Enum<T>> AbstractFieldBuilder<?,?,?> StartEnumField(ConfigEntryBuilder entryBuilder, RuleEntry<T> entry) {
 		Class<T> clazz = entry.key().getDefaultValue().getDeclaringClass();
 		return entryBuilder.startEnumSelector(entry.GetDisplayName(), clazz, entry.GetValue())
 			.setSaveConsumer(entry::SetValue)
@@ -251,7 +251,7 @@ public final class ClothGamerulesScreenBuilder
 			;
 	}
 
-	private @Nullable <T> AbstractFieldBuilder<?,?,?> StartSringField(ConfigEntryBuilder entryBuilder, RuleEntry<T> entry) {
+	private <T> AbstractFieldBuilder<?,?,?> StartSringField(ConfigEntryBuilder entryBuilder, RuleEntry<T> entry) {
 		return entryBuilder.startStrField(entry.GetDisplayName(), entry.GetStringValue())
 			.setSaveConsumer(entry::SetStringValue)
 			.setErrorSupplier(entry::StringErrorProvider)
