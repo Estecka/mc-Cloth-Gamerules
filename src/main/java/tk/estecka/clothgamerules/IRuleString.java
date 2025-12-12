@@ -1,16 +1,16 @@
 package tk.estecka.clothgamerules;
 
 import java.util.Optional;
-import org.jetbrains.annotations.Nullable;
-import net.fabricmc.fabric.api.gamerule.v1.rule.DoubleRule;
+import com.mojang.serialization.DataResult;
 import net.minecraft.text.Text;
-import net.minecraft.world.GameRules;
-import net.minecraft.world.GameRules.IntRule;
+import net.minecraft.world.rule.GameRule;
+import net.minecraft.world.rule.GameRules;
 
 public interface IRuleString
 {
 	boolean TryParse(String value);
 	String GetValue();
+	String GetReset();
 
 	default String GetErrorString(){
 		return "argument.enum.invalid";
@@ -27,25 +27,34 @@ public interface IRuleString
 /* # Wrappers                                                                 */
 /******************************************************************************/
 
-	static public @Nullable IRuleString Of(GameRules.Rule<?> rule){
-		if (rule instanceof IntRule    typedRule) return Of(typedRule);
-		if (rule instanceof DoubleRule typedRule) return Of(typedRule);
-		return null;
-	}
+	static public <T> IRuleString Of(GameRules instances, GameRules reset, GameRule<T> key) {
+		return new IRuleString() {
+			@Override public boolean TryParse(String value){
+				DataResult<T> result = key.deserialize(value);
+				if (result.isError())
+					return false;
+				else {
+					instances.setValue(key, result.getOrThrow(), null);
+					return true;
+				}
 
-	static public IRuleString Of(IntRule rule) {
-		return new IRuleString() {
-			@Override public boolean TryParse(String value){ return rule.validateAndSet(value); }
-			@Override public String GetValue(){ return String.valueOf(rule.get()); }
-			@Override public String GetErrorString() { return "parsing.int.invalid"; }
-		};
-	}
-	
-	static public IRuleString Of(DoubleRule rule) {
-		return new IRuleString() {
-			@Override public boolean TryParse(String value){ return rule.validate(value); }
-			@Override public String GetValue(){ return String.valueOf(rule.get()); }
-			@Override public String GetErrorString() { return "parsing.double.invalid"; }
+			}
+			@Override public String GetValue(){
+				return instances.getRuleValueName(key);
+			}
+			@Override public String GetReset(){
+				return instances.getRuleValueName(key);
+			}
+
+			@Override
+			public Optional<Text> ErrorProvider(String value) {
+				Text message = null;
+				var result = key.deserialize(value);
+				if (result.isError())
+					message = Text.literal(result.error().get().message());
+
+				return Optional.ofNullable(message);
+			}
 		};
 	}
 }

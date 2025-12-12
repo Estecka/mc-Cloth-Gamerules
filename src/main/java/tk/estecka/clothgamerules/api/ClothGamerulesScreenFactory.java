@@ -4,7 +4,7 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
-import net.minecraft.world.GameRules;
+import net.minecraft.world.rule.GameRules;
 
 public interface ClothGamerulesScreenFactory
 {

@@ -8,3 +8,7 @@ Initial Release
 - `Gamerules::new` Now require feature flags
 #### Yarn Mappings
 - Some rules' `validate` were renamed to `validateAndSet`
+
+### 1.21.11
+- Most subtypes (`Rule`, `Key`, `Type`) are gone and replaced.
+- Miraculously, no API changes are required.

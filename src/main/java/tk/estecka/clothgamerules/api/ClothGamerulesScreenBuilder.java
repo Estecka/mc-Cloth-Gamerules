@@ -16,7 +16,8 @@ import me.shedaniel.clothconfig2.gui.entries.TextListEntry;
 import me.shedaniel.clothconfig2.impl.builders.AbstractFieldBuilder;
 import me.shedaniel.clothconfig2.impl.builders.TextDescriptionBuilder;
 import net.fabricmc.fabric.api.gamerule.v1.CustomGameRuleCategory;
-import net.fabricmc.fabric.api.gamerule.v1.rule.EnumRule;
+import net.fabricmc.fabric.impl.gamerule.RuleTypeExtensions;
+import net.fabricmc.fabric.impl.gamerule.rpc.FabricGameRuleType;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.resource.language.I18n;
 import net.minecraft.resource.featuretoggle.FeatureFlags;
@@ -24,8 +25,10 @@ import net.minecraft.resource.featuretoggle.FeatureSet;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
-import net.minecraft.world.GameRules;
-import net.minecraft.world.GameRules.*;
+import net.minecraft.world.rule.GameRule;
+import net.minecraft.world.rule.GameRuleCategory;
+import net.minecraft.world.rule.GameRuleType;
+import net.minecraft.world.rule.GameRules;
 import tk.estecka.clothgamerules.IRuleCategory;
 import tk.estecka.clothgamerules.IRuleString;
 
@@ -71,7 +74,7 @@ public final class ClothGamerulesScreenBuilder
 	}
 
 	public ClothGamerulesScreenBuilder ResetValues(GameRules resetValues){
-		this.resetValues = resetValues.copy(ALL_FEATURES);
+		this.resetValues = resetValues.withEnabledFeatures(ALL_FEATURES);
 		return this;
 	}
 
@@ -79,7 +82,7 @@ public final class ClothGamerulesScreenBuilder
 		if (values == null)
 			this.displayValues.remove(translationKey);
 		else
-			this.displayValues.put(translationKey, values.copy(ALL_FEATURES));
+			this.displayValues.put(translationKey, values.withEnabledFeatures(ALL_FEATURES));
 		return this;
 	}
 
@@ -115,46 +118,46 @@ public final class ClothGamerulesScreenBuilder
 
 		// Map<Identifier, SubCategoryBuilder> subs = new HashMap<>();
 		Map<Identifier, CategoryEntries> subs = new HashMap<>();
-		Map<Identifier, GameRules.Category> vanillaCats = new HashMap<>();
+		Map<Identifier, GameRuleCategory> vanillaCats = new HashMap<>();
 
 		builder.setParentScreen(parent);
 		builder.setTitle(title);
 		builder.setSavingRunnable(() -> onClosed.accept(Optional.of(rules)));
 
-		rules.accept(new GameRules.Visitor() {
-			@Override public <T extends Rule<T>> void visit(Key<T> key, Type<T> type){
-				IRuleCategory cat = GetCategory(key);
-				Identifier catId = cat.GetId();
+		rules.streamRules().forEach(key->{
+			IRuleCategory cat = GetCategory(key);
+			Identifier catId = cat.GetId();
 
-				vanillaCats.computeIfAbsent(catId, __-> key.getCategory());
+			vanillaCats.computeIfAbsent(catId, __-> key.getCategory());
 
-				// var sub = subs.computeIfAbsent(catId, id -> entries.startSubCategory(cat.GetTitle()));
-				var sub = subs.computeIfAbsent(catId, id -> new CategoryEntries(entries, cat));
+			// var sub = subs.computeIfAbsent(catId, id -> entries.startSubCategory(cat.GetTitle()));
+			var sub = subs.computeIfAbsent(catId, id -> new CategoryEntries(entries, cat));
 
-				var field = StartRuleField(entries, key, type, rules.get(key), resetValues.get(key));
-				AbstractConfigListEntry<?> entry = (field != null) ? field.build() : StartMissingType(entries, key, type).build();
-				sub.entries.add(entry);
+			TypedRuleEntry<?> ruleEntry = new TypedRuleEntry<>(rules, resetValues, key);
+			var field = StartRuleField(entries, ruleEntry);
+			AbstractConfigListEntry<?> entry = (field != null) ? field.build() : StartMissingType(entries, key).build();
+			sub.entries.add(entry);
 
-				List<String> searchTags = new ArrayList<String>();
-				searchTags.add(key.getTranslationKey());
-				searchTags.add(I18n.translate(key.getTranslationKey()));
-				entry.appendSearchTags(searchTags);
-				sub.header.appendSearchTags(searchTags);
-			}
+			List<String> searchTags = new ArrayList<String>();
+			searchTags.add(key.getTranslationKey());
+			searchTags.add(I18n.translate(key.getTranslationKey()));
+			entry.appendSearchTags(searchTags);
+			sub.header.appendSearchTags(searchTags);
 		});
 
 		var sortedSubs =  subs.entrySet().stream().sorted((a,b)->{
 			Identifier idA=a.getKey(), idB=b.getKey();
-			boolean mA, mB;
-			mA = a.getKey().getNamespace().equals("minecraft");
-			mB = b.getKey().getNamespace().equals("minecraft");
+			boolean isAVanilla, isBVanilla;
+			isAVanilla = a.getKey().getNamespace().equals("minecraft");
+			isBVanilla = b.getKey().getNamespace().equals("minecraft");
 
 			// Sort vanilla categories above modded ones.
-			if (mA != mB)
-				return -Boolean.compare(mA, mB);
-			// Sort vanilla rules in the same order as the vanilla screen.
-			else if (mA && mB)
-				return vanillaCats.get(idA).compareTo(vanillaCats.get(idB));
+			if (isAVanilla != isBVanilla)
+				return -Boolean.compare(isAVanilla, isBVanilla);
+			// // Sort vanilla rules in the same order as the vanilla screen.
+			// // @deprecated Newer categories are sorted by id.
+			// else if (isAVanilla && isBVanilla)
+			// 	return vanillaCats.get(idA).compareTo(vanillaCats.get(idB));
 			else {
 				int diff = idA.getNamespace().compareTo(idB.getNamespace());
 				if (diff != 0)
@@ -183,7 +186,7 @@ public final class ClothGamerulesScreenBuilder
 		return builder.build();
 	}
 
-	static private IRuleCategory GetCategory(Key<?> key){
+	static private IRuleCategory GetCategory(GameRule<?> key){
 		var custom = CustomGameRuleCategory.getCategory(key);
 		if (custom.isPresent())
 			return IRuleCategory.Of(custom.get());
@@ -191,17 +194,17 @@ public final class ClothGamerulesScreenBuilder
 			return IRuleCategory.Of(key.getCategory());
 	}
 
-	private Optional<Text[]>	CreateTooltip(Key<?> key, Type<?> type){
+	private Optional<Text[]> CreateTooltip(GameRule<?> key){
 		ArrayList<Text> tooltip = new ArrayList<>(4);
 		String descKey = key.getTranslationKey()+".description";
 
-		tooltip.add(Text.literal(key.getName()).formatted(Formatting.YELLOW));
+		tooltip.add(Text.literal(key.getId().toString()).formatted(Formatting.YELLOW));
 		if (I18n.hasTranslation(descKey))
 			tooltip.add(Text.translatable(descKey));
 
 		for (var entry : this.displayValues.entrySet()){
 			tooltip.add(
-				Text.translatable(entry.getKey(),entry.getValue().get(key).serialize())
+				Text.translatable(entry.getKey(), entry.getValue().getRuleValueName(key))
 				.formatted(Formatting.GRAY)
 			);
 		}
@@ -209,50 +212,75 @@ public final class ClothGamerulesScreenBuilder
 		return Optional.of(tooltip.toArray(new Text[1]));
 	}
 
-	private <T extends Rule<T>> @Nullable AbstractFieldBuilder<?,?,?>	StartRuleField(ConfigEntryBuilder entryBuilder, Key<T> key, Type<T> type, Rule<T> rule, Rule<T> resetValue) {
-		AbstractFieldBuilder<?,?,?> field = null;
+	private <T> @Nullable AbstractFieldBuilder<?,?,?>	StartRuleField(ConfigEntryBuilder entryBuilder, TypedRuleEntry<T> entry) {
+		Object ruleType = entry.GetType();
 
-		String nameKey = key.getTranslationKey();
-		Text displayName = Text.translatable(nameKey);
-
-		IRuleString validateableRule = IRuleString.Of(rule);
-		if (validateableRule != null){
-			field = entryBuilder.startStrField(displayName, validateableRule.GetValue())
-				.setSaveConsumer(s -> validateableRule.TryParse(nameKey))
-				.setErrorSupplier(validateableRule::ErrorProvider)
-				.setDefaultValue(resetValue.serialize())
-				;
-		}
-		else if (rule instanceof BooleanRule boolRule){
-			field = entryBuilder.startBooleanToggle(displayName, boolRule.get())
-				.setSaveConsumer(b -> boolRule.set(b, null))
-				.setDefaultValue(((BooleanRule)resetValue).get())
-				;
-		}
-		else if (rule instanceof EnumRule enumRule){
-			@SuppressWarnings("unchecked")
-			Class<Enum<?>> enumClass = enumRule.getEnumClass();
-			field = entryBuilder.startEnumSelector(displayName, enumClass, enumRule.get())
-				.setSaveConsumer(e -> enumRule.set(e, null))
-				.setErrorSupplier(e -> enumRule.supports(e) ? Optional.empty() : Optional.of(Text.translatable("argument.enum.invalid", e.toString())))
-				.setDefaultValue(((EnumRule<?>)resetValue).get())
-				;
-		}
+		AbstractFieldBuilder<?,?,?> field = switch (ruleType) {
+			case GameRuleType.BOOL       -> StartBoolField(entryBuilder, (TypedRuleEntry<Boolean>)entry);
+			case FabricGameRuleType.ENUM -> StartEnumField(entryBuilder, (TypedRuleEntry<Enum>)entry);
+			default -> StartSringField(entryBuilder, entry);
+		};
 
 		if (field != null)
-			field.setTooltipSupplier(() -> CreateTooltip(key, type));
+			field.setTooltipSupplier(() -> CreateTooltip(entry.key()));
 
 		return field;
 	}
 
-	private TextDescriptionBuilder	StartMissingType(ConfigEntryBuilder entryBuilder, Key<?> key, Type<?> type){
+	private @Nullable AbstractFieldBuilder<?,?,?> StartBoolField(ConfigEntryBuilder entryBuilder, TypedRuleEntry<Boolean> entry) {
+		return entryBuilder.startBooleanToggle(entry.GetDisplayName(), entry.GetValue())
+			.setSaveConsumer(entry::SetValue)
+			.setDefaultValue(entry.GetReset())
+			;
+	}
+
+	private @Nullable <T extends Enum<T>> AbstractFieldBuilder<?,?,?> StartEnumField(ConfigEntryBuilder entryBuilder, TypedRuleEntry<T> entry) {
+		Class<T> clazz = (Class)entry.GetValue().getClass();
+		return entryBuilder.startEnumSelector(entry.GetDisplayName(), clazz, entry.GetValue())
+			.setSaveConsumer(entry::SetValue)
+			// //FIXME
+			// .setErrorSupplier(e -> enumRule.supports(e) ? Optional.empty() : Optional.of(Text.translatable("argument.enum.invalid", e.toString())))
+			.setDefaultValue(entry.GetReset())
+			;
+	}
+
+	private @Nullable <T> AbstractFieldBuilder<?,?,?> StartSringField(ConfigEntryBuilder entryBuilder, TypedRuleEntry<T> entry) {
+		IRuleString stringRule = IRuleString.Of(entry.instance, entry.reset, entry.key);
+		return entryBuilder.startStrField(entry.GetDisplayName(), stringRule.GetValue())
+			.setSaveConsumer(stringRule::TryParse)
+			.setErrorSupplier(stringRule::ErrorProvider)
+			.setDefaultValue(stringRule.GetReset())
+			;
+	}
+
+	private TextDescriptionBuilder	StartMissingType(ConfigEntryBuilder entryBuilder, GameRule<?> key){
 		Text text = Text.translatable(key.getTranslationKey()).formatted(Formatting.GRAY)
 			.append(" ")
 			.append(MISSING_WIDGET)
 			;
 
 		var entry = entryBuilder.startTextDescription(text);
-		entry.setTooltipSupplier(() -> CreateTooltip(key, type));
+		entry.setTooltipSupplier(() -> CreateTooltip(key));
 		return entry;
 	}
+
+	static private record TypedRuleEntry<T>(
+		GameRules instance,
+		GameRules reset,
+		GameRule<T> key
+	){
+		public T GetValue(){ return instance.getValue(key); }
+		public T GetReset(){ return reset.getValue(key); }
+		public Text GetDisplayName(){ return Text.translatable(key.getTranslationKey()); }
+		public void SetValue(T value) { instance.setValue(key, value, null); }
+
+		public Object GetType (){
+			FabricGameRuleType fabric = ((RuleTypeExtensions)(Object)key).fabric_getType();
+			if (fabric != null)
+				return fabric;
+			else
+				return key.getType();
+		}
+	}
+
 }

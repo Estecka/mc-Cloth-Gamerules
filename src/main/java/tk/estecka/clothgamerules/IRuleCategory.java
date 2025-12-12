@@ -4,7 +4,7 @@ import net.fabricmc.fabric.api.gamerule.v1.CustomGameRuleCategory;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
-import net.minecraft.world.GameRules;
+import net.minecraft.world.rule.GameRuleCategory;
 
 public interface IRuleCategory
 {
@@ -16,29 +16,28 @@ public interface IRuleCategory
 /* # Wrappers                                                                 */
 /******************************************************************************/
 
-	static public IRuleCategory Of(GameRules.Category vanilla){
+	static public IRuleCategory Of(GameRuleCategory vanilla){
 		return new IRuleCategory() {
-			@Override public Text	GetTitle(){
-				return Text.translatable(vanilla.getCategory()).formatted(Formatting.BOLD, Formatting.YELLOW);
+			@Override public Text GetTitle(){
+				return vanilla.getText().formatted(Formatting.BOLD, Formatting.YELLOW);
 			}
 		
 			@Override public Identifier GetId(){
-				return Identifier.of("minecraft", vanilla.getCategory().replace('.', '_'));
+				return vanilla.id();
 			}
-			
 		};
 	}
 
 	static public IRuleCategory Of(CustomGameRuleCategory fabric){
 		return new IRuleCategory() {
-			@Override public Text	GetTitle(){
+			@Override public Text GetTitle(){
 				return fabric.getName();
 			}
 		
 			@Override public Identifier GetId(){
 				return fabric.getId();
 			}
-			
 		};
 	}
+
 }
