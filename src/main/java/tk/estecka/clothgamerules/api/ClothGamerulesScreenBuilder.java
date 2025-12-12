@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 import org.jetbrains.annotations.Nullable;
+import com.mojang.serialization.DataResult;
 import me.shedaniel.clothconfig2.api.AbstractConfigListEntry;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
@@ -29,6 +30,7 @@ import net.minecraft.world.rule.GameRule;
 import net.minecraft.world.rule.GameRuleCategory;
 import net.minecraft.world.rule.GameRuleType;
 import net.minecraft.world.rule.GameRules;
+import tk.estecka.clothgamerules.ClothGamerules;
 import tk.estecka.clothgamerules.IRuleCategory;
 import tk.estecka.clothgamerules.IRuleString;
 
@@ -230,16 +232,16 @@ public final class ClothGamerulesScreenBuilder
 	private @Nullable AbstractFieldBuilder<?,?,?> StartBoolField(ConfigEntryBuilder entryBuilder, TypedRuleEntry<Boolean> entry) {
 		return entryBuilder.startBooleanToggle(entry.GetDisplayName(), entry.GetValue())
 			.setSaveConsumer(entry::SetValue)
+			.setErrorSupplier(entry::ErrorProvider)
 			.setDefaultValue(entry.GetReset())
 			;
 	}
 
 	private @Nullable <T extends Enum<T>> AbstractFieldBuilder<?,?,?> StartEnumField(ConfigEntryBuilder entryBuilder, TypedRuleEntry<T> entry) {
-		Class<T> clazz = (Class)entry.GetValue().getClass();
+		Class<T> clazz = entry.key.getDefaultValue().getDeclaringClass();
 		return entryBuilder.startEnumSelector(entry.GetDisplayName(), clazz, entry.GetValue())
 			.setSaveConsumer(entry::SetValue)
-			// //FIXME
-			// .setErrorSupplier(e -> enumRule.supports(e) ? Optional.empty() : Optional.of(Text.translatable("argument.enum.invalid", e.toString())))
+			.setErrorSupplier(entry::ErrorProvider)
 			.setDefaultValue(entry.GetReset())
 			;
 	}
@@ -272,7 +274,24 @@ public final class ClothGamerulesScreenBuilder
 		public T GetValue(){ return instance.getValue(key); }
 		public T GetReset(){ return reset.getValue(key); }
 		public Text GetDisplayName(){ return Text.translatable(key.getTranslationKey()); }
-		public void SetValue(T value) { instance.setValue(key, value, null); }
+
+		public void SetValue(T value) {
+			DataResult<T> result = key.deserialize(key.getValueName(value));
+
+			if (result.isSuccess())
+				instance.setValue(key, value, null);
+			else
+				ClothGamerules.LOGGER.error("{}", result.error().get().message());
+		}
+
+		public Optional<Text> ErrorProvider(T value){
+			Text error = null;
+			DataResult<T> result = key.deserialize(key.getValueName(value));
+			if (result.isError())
+				error = Text.literal(result.error().get().message());
+
+			return Optional.ofNullable(error);
+		}
 
 		public Object GetType (){
 			FabricGameRuleType fabric = ((RuleTypeExtensions)(Object)key).fabric_getType();

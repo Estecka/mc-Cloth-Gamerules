@@ -26,12 +26,18 @@ implements ModInitializer
 
 			GameRuleBuilder.forInteger(1)          .category(fabricCategory).buildAndRegister(Identifier.of("clothrule", "int"));
 			GameRuleBuilder.forDouble(1.0)         .category(fabricCategory).buildAndRegister(Identifier.of("clothrule", "double"));
-			GameRuleBuilder.forEnum(ETestEnum.SOME).category(fabricCategory).buildAndRegister(Identifier.of("clothrule", "enum"));;
-	
-			// FIXME
-			// GameRuleRegistry.register("clothrule.int.bounded",    category, GameRuleFactory.createIntRule(1, 0, 16));
-			// GameRuleRegistry.register("clothrule.double.bounded", category, GameRuleFactory.createDoubleRule(1.0, 0.1, 9.999));
-			// GameRuleRegistry.register("clothrule.enum.limited",   category, GameRuleFactory.createEnumRule(ETestEnum.SOME, new ETestEnum[]{ ETestEnum.NONE, ETestEnum.SOME }));
+			GameRuleBuilder.forEnum(ETestEnum.SOME).category(fabricCategory).buildAndRegister(Identifier.of("clothrule", "enum"));
+
+			GameRuleBuilder.forInteger(1).range(0, 16)
+				.category(fabricCategory).buildAndRegister(Identifier.of("clothrule", "int.bounded"))
+				;
+			GameRuleBuilder.forDouble(1.0).range(0.1, 9.99)
+				.category(fabricCategory).buildAndRegister(Identifier.of("clothrule", "double.bounded"))
+				;
+			GameRuleBuilder.forEnum(ETestEnum.SOME).supportedValues(ETestEnum.NONE, ETestEnum.SOME)
+				.category(fabricCategory).buildAndRegister(Identifier.of("clothrule", "enum.bounded"))
+				;
+
 		}
 
 	}
