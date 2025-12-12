@@ -1,6 +1,7 @@
 package tk.estecka.clothgamerules.api;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -123,7 +124,9 @@ public final class ClothGamerulesScreenBuilder
 		builder.setTitle(title);
 		builder.setSavingRunnable(() -> onClosed.accept(Optional.of(rules)));
 
-		rules.streamRules().forEach(key->{
+		rules.streamRules()
+		.sorted(Comparator.comparing(GameRule::getId))
+		.forEach(key->{
 			IRuleCategory cat = GetCategory(key);
 			Identifier catId = cat.GetId();
 
@@ -154,7 +157,7 @@ public final class ClothGamerulesScreenBuilder
 			if (isAVanilla != isBVanilla)
 				return -Boolean.compare(isAVanilla, isBVanilla);
 			// // Sort vanilla rules in the same order as the vanilla screen.
-			// // @deprecated Newer categories are sorted by id.
+			// // @deprecated Newer categories are sorted alphabetically.
 			// else if (isAVanilla && isBVanilla)
 			// 	return vanillaCats.get(idA).compareTo(vanillaCats.get(idB));
 			else {
