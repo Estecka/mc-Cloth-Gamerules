@@ -3,7 +3,7 @@ package tk.estecka.clothgamerules;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public final class ClothGamerules
+public final class ClothRulesMod
 {
 	static public final Logger LOGGER = LoggerFactory.getLogger("cloth-gamerules");
 }

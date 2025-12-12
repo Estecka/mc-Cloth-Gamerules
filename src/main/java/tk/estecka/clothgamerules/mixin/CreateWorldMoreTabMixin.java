@@ -13,7 +13,7 @@ import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.world.CreateWorldScreen;
 import net.minecraft.client.gui.screen.world.EditGameRulesScreen;
-import net.minecraft.world.GameRules;
+import net.minecraft.world.rule.GameRules;
 import tk.estecka.clothgamerules.api.ClothGamerulesScreenBuilder;
 
 @Mixin(targets="net/minecraft/client/gui/screen/world/CreateWorldScreen$MoreTab")

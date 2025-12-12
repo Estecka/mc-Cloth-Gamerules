@@ -18,4 +18,4 @@ Initial release
 - Added a builder-based API, allowing custom tooltip display values.
 - Removed circular dependency with Preferred-Gamerules
 ### 1.2.1
-- Updated for MC 1.21.11
+- Updated for MC 1.21.11. Miraculously, no API changes are required.
