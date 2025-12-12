@@ -11,4 +11,3 @@ Initial Release
 
 ### 1.21.11
 - Most subtypes (`Rule`, `Key`, `Type`) are gone and replaced.
-- Miraculously, no API changes are required.
