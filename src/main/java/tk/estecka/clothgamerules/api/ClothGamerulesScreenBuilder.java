@@ -115,6 +115,17 @@ public final class ClothGamerulesScreenBuilder
 	public Screen Build(){
 		final ConfigBuilder builder = ConfigBuilder.create();
 		final ConfigEntryBuilder entries = builder.entryBuilder();
+		final var wildcard = builder.getOrCreateCategory(WILDCARD_TITLE);
+
+		wildcard.addEntry(entries.startBooleanToggle(Text.literal("bool"), true).build());
+		builder.setFallbackCategory(wildcard);
+		return builder.build();
+	}
+
+
+	public Screen BuildRealScreen(){
+		final ConfigBuilder builder = ConfigBuilder.create();
+		final ConfigEntryBuilder entries = builder.entryBuilder();
 
 		// Map<Identifier, SubCategoryBuilder> subs = new HashMap<>();
 		Map<Identifier, CategoryEntries> subs = new HashMap<>();
