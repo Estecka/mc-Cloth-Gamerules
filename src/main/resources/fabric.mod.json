@@ -34,6 +34,6 @@
 		"java": ">=21"
 	},
 	"recommends": {
-		"cloth-config": ">=16.0.141"
+		"cloth-config": ">=21.11.151"
 	}
 }
