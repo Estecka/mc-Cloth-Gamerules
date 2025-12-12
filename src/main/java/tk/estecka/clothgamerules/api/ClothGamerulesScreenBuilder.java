@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 import org.jetbrains.annotations.Nullable;
-import com.mojang.serialization.DataResult;
 import me.shedaniel.clothconfig2.api.AbstractConfigListEntry;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
@@ -17,7 +16,6 @@ import me.shedaniel.clothconfig2.gui.entries.TextListEntry;
 import me.shedaniel.clothconfig2.impl.builders.AbstractFieldBuilder;
 import me.shedaniel.clothconfig2.impl.builders.TextDescriptionBuilder;
 import net.fabricmc.fabric.api.gamerule.v1.CustomGameRuleCategory;
-import net.fabricmc.fabric.impl.gamerule.RuleTypeExtensions;
 import net.fabricmc.fabric.impl.gamerule.rpc.FabricGameRuleType;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.resource.language.I18n;
@@ -30,9 +28,8 @@ import net.minecraft.world.rule.GameRule;
 import net.minecraft.world.rule.GameRuleCategory;
 import net.minecraft.world.rule.GameRuleType;
 import net.minecraft.world.rule.GameRules;
-import tk.estecka.clothgamerules.ClothGamerules;
 import tk.estecka.clothgamerules.IRuleCategory;
-import tk.estecka.clothgamerules.IRuleString;
+import tk.estecka.clothgamerules.RuleEntry;
 
 public final class ClothGamerulesScreenBuilder
 {
@@ -52,7 +49,7 @@ public final class ClothGamerulesScreenBuilder
 
 
 /******************************************************************************/
-/* # Buider config                                                            */
+/* # Builder config                                                           */
 /******************************************************************************/
 
 	public ClothGamerulesScreenBuilder Parent(Screen parent) {
@@ -135,7 +132,7 @@ public final class ClothGamerulesScreenBuilder
 			// var sub = subs.computeIfAbsent(catId, id -> entries.startSubCategory(cat.GetTitle()));
 			var sub = subs.computeIfAbsent(catId, id -> new CategoryEntries(entries, cat));
 
-			TypedRuleEntry<?> ruleEntry = new TypedRuleEntry<>(rules, resetValues, key);
+			RuleEntry<?> ruleEntry = new RuleEntry<>(rules, resetValues, key);
 			var field = StartRuleField(entries, ruleEntry);
 			AbstractConfigListEntry<?> entry = (field != null) ? field.build() : StartMissingType(entries, key).build();
 			sub.entries.add(entry);
@@ -214,12 +211,17 @@ public final class ClothGamerulesScreenBuilder
 		return Optional.of(tooltip.toArray(new Text[1]));
 	}
 
-	private <T> @Nullable AbstractFieldBuilder<?,?,?>	StartRuleField(ConfigEntryBuilder entryBuilder, TypedRuleEntry<T> entry) {
+
+/******************************************************************************/
+/* # Field Builders                                                           */
+/******************************************************************************/
+
+	private <T> @Nullable AbstractFieldBuilder<?,?,?>	StartRuleField(ConfigEntryBuilder entryBuilder, RuleEntry<T> entry) {
 		Object ruleType = entry.GetType();
 
 		AbstractFieldBuilder<?,?,?> field = switch (ruleType) {
-			case GameRuleType.BOOL       -> StartBoolField(entryBuilder, (TypedRuleEntry<Boolean>)entry);
-			case FabricGameRuleType.ENUM -> StartEnumField(entryBuilder, (TypedRuleEntry<Enum>)entry);
+			case GameRuleType.BOOL       -> StartBoolField(entryBuilder, (RuleEntry<Boolean>)entry);
+			case FabricGameRuleType.ENUM -> StartEnumField(entryBuilder, (RuleEntry<Enum>)entry);
 			default -> StartSringField(entryBuilder, entry);
 		};
 
@@ -229,7 +231,7 @@ public final class ClothGamerulesScreenBuilder
 		return field;
 	}
 
-	private @Nullable AbstractFieldBuilder<?,?,?> StartBoolField(ConfigEntryBuilder entryBuilder, TypedRuleEntry<Boolean> entry) {
+	private @Nullable AbstractFieldBuilder<?,?,?> StartBoolField(ConfigEntryBuilder entryBuilder, RuleEntry<Boolean> entry) {
 		return entryBuilder.startBooleanToggle(entry.GetDisplayName(), entry.GetValue())
 			.setSaveConsumer(entry::SetValue)
 			.setErrorSupplier(entry::ErrorProvider)
@@ -237,8 +239,8 @@ public final class ClothGamerulesScreenBuilder
 			;
 	}
 
-	private @Nullable <T extends Enum<T>> AbstractFieldBuilder<?,?,?> StartEnumField(ConfigEntryBuilder entryBuilder, TypedRuleEntry<T> entry) {
-		Class<T> clazz = entry.key.getDefaultValue().getDeclaringClass();
+	private @Nullable <T extends Enum<T>> AbstractFieldBuilder<?,?,?> StartEnumField(ConfigEntryBuilder entryBuilder, RuleEntry<T> entry) {
+		Class<T> clazz = entry.key().getDefaultValue().getDeclaringClass();
 		return entryBuilder.startEnumSelector(entry.GetDisplayName(), clazz, entry.GetValue())
 			.setSaveConsumer(entry::SetValue)
 			.setErrorSupplier(entry::ErrorProvider)
@@ -246,15 +248,15 @@ public final class ClothGamerulesScreenBuilder
 			;
 	}
 
-	private @Nullable <T> AbstractFieldBuilder<?,?,?> StartSringField(ConfigEntryBuilder entryBuilder, TypedRuleEntry<T> entry) {
-		IRuleString stringRule = IRuleString.Of(entry.instance, entry.reset, entry.key);
-		return entryBuilder.startStrField(entry.GetDisplayName(), stringRule.GetValue())
-			.setSaveConsumer(stringRule::TryParse)
-			.setErrorSupplier(stringRule::ErrorProvider)
-			.setDefaultValue(stringRule.GetReset())
+	private @Nullable <T> AbstractFieldBuilder<?,?,?> StartSringField(ConfigEntryBuilder entryBuilder, RuleEntry<T> entry) {
+		return entryBuilder.startStrField(entry.GetDisplayName(), entry.GetStringValue())
+			.setSaveConsumer(entry::SetStringValue)
+			.setErrorSupplier(entry::StringErrorProvider)
+			.setDefaultValue(entry.GetStringReset())
 			;
 	}
 
+	@Deprecated
 	private TextDescriptionBuilder	StartMissingType(ConfigEntryBuilder entryBuilder, GameRule<?> key){
 		Text text = Text.translatable(key.getTranslationKey()).formatted(Formatting.GRAY)
 			.append(" ")
@@ -264,42 +266,6 @@ public final class ClothGamerulesScreenBuilder
 		var entry = entryBuilder.startTextDescription(text);
 		entry.setTooltipSupplier(() -> CreateTooltip(key));
 		return entry;
-	}
-
-	static private record TypedRuleEntry<T>(
-		GameRules instance,
-		GameRules reset,
-		GameRule<T> key
-	){
-		public T GetValue(){ return instance.getValue(key); }
-		public T GetReset(){ return reset.getValue(key); }
-		public Text GetDisplayName(){ return Text.translatable(key.getTranslationKey()); }
-
-		public void SetValue(T value) {
-			DataResult<T> result = key.deserialize(key.getValueName(value));
-
-			if (result.isSuccess())
-				instance.setValue(key, value, null);
-			else
-				ClothGamerules.LOGGER.error("{}", result.error().get().message());
-		}
-
-		public Optional<Text> ErrorProvider(T value){
-			Text error = null;
-			DataResult<T> result = key.deserialize(key.getValueName(value));
-			if (result.isError())
-				error = Text.literal(result.error().get().message());
-
-			return Optional.ofNullable(error);
-		}
-
-		public Object GetType (){
-			FabricGameRuleType fabric = ((RuleTypeExtensions)(Object)key).fabric_getType();
-			if (fabric != null)
-				return fabric;
-			else
-				return key.getType();
-		}
 	}
 
 }
