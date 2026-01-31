@@ -17,7 +17,6 @@ import me.shedaniel.clothconfig2.gui.entries.TextListEntry;
 import me.shedaniel.clothconfig2.impl.builders.AbstractFieldBuilder;
 import me.shedaniel.clothconfig2.impl.builders.TextDescriptionBuilder;
 import net.fabricmc.fabric.api.gamerule.v1.CustomGameRuleCategory;
-import net.fabricmc.fabric.impl.gamerule.rpc.FabricGameRuleType;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.resource.language.I18n;
 import net.minecraft.resource.featuretoggle.FeatureFlags;
@@ -27,8 +26,8 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.rule.GameRule;
 import net.minecraft.world.rule.GameRuleCategory;
-import net.minecraft.world.rule.GameRuleType;
 import net.minecraft.world.rule.GameRules;
+import tk.estecka.clothgamerules.ETypeToken;
 import tk.estecka.clothgamerules.IRuleCategory;
 import tk.estecka.clothgamerules.RuleEntry;
 
@@ -220,11 +219,11 @@ public final class ClothGamerulesScreenBuilder
 /******************************************************************************/
 
 	private <T> AbstractFieldBuilder<?,?,?>	StartRuleField(ConfigEntryBuilder entryBuilder, RuleEntry<T> entry) {
-		Object ruleType = entry.GetType();
+		ETypeToken ruleType = entry.GetTypeToken();
 
 		AbstractFieldBuilder<?,?,?> field = switch (ruleType) {
-			case GameRuleType.BOOL       -> StartBoolField(entryBuilder, (RuleEntry<Boolean>)entry);
-			case FabricGameRuleType.ENUM -> StartEnumField(entryBuilder, (RuleEntry<Enum>)entry);
+			case ETypeToken.BOOL -> StartBoolField(entryBuilder, (RuleEntry<Boolean>)entry);
+			case ETypeToken.ENUM -> StartEnumField(entryBuilder, (RuleEntry<Enum>)entry);
 			default -> StartSringField(entryBuilder, entry);
 		};
 

@@ -19,3 +19,5 @@ Initial release
 - Removed circular dependency with Preferred-Gamerules
 ### 1.2.1
 - Updated for MC 1.21.11. Miraculously, no API changes are required.
+### 1.2.2
+- Fixed all rules appearing as string fields.

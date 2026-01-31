@@ -51,6 +51,15 @@ public record RuleEntry<T>(
 		return Optional.ofNullable(error);
 	}
 
+	public ETypeToken GetTypeToken(){
+		Object type = this.GetType();
+		for (ETypeToken token : ETypeToken.values())
+			if (type == token.identity)
+				return token;
+
+		return ETypeToken.STRING;
+	}
+
 	public Object GetType (){
 		FabricGameRuleType fabric = ((RuleTypeExtensions)(Object)key).fabric_getType();
 		if (fabric != null)
